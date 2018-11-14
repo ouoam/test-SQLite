@@ -6,11 +6,24 @@
 
 #include <ios>
 #include <iostream>
+#include <string>
+#include <filesystem>
 #include "sqlite3.h"
 
 using namespace std;
+namespace fs = std::filesystem;
 
 int main(int argc, char* argv[]) {
+
+	/*std::string path = "D:/osu!/Songs/";
+	for (const auto & p : fs::recursive_directory_iterator(path)) {
+		if (fs::is_regular_file(p) && p.path().extension() == ".osu")
+			std::cout << p.path() << std::endl;
+	}
+		
+	system("pause");*/
+
+
 	int rc;
 	char *error;
 
@@ -29,7 +42,31 @@ int main(int argc, char* argv[]) {
 
 	// Execute SQL
 	cout << "Creating MyTable ..." << endl;
-	const char *sqlCreateTable = "CREATE TABLE MyTable (id INTEGER PRIMARY KEY, value STRING);";
+	const char *sqlCreateTable = 
+	"CREATE TABLE songs ("
+		"id	INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,"
+		"Title	TEXT,"
+		"TitleUnicode	TEXT,"
+		"Artist	TEXT,"
+		"ArtistUnicode	TEXT,"
+		"Creator	TEXT,"
+		"Version	TEXT,"
+		"Source	TEXT,"
+		"Tags	TEXT,"
+		"BeatmapID	NUMERIC,"
+		"BeatmapSetID	NUMERIC,"
+		"AudioFilename	TEXT,"
+		"AudioLeadIn	NUMERIC,"
+		"PreviewTime	NUMERIC,"
+		"HPDrainRate	REAL,"
+		"CircleSize	REAL,"
+		"OverallDifficulty	REAL,"
+		"ApproachRate	REAL,"
+		"CircleRadius	REAL,"
+		"SliderMultiplier	REAL,"
+		"OsuFile	TEXT,"
+		"OsuDir	TEXT"
+	");";
 	rc = sqlite3_exec(db, sqlCreateTable, NULL, NULL, &error);
 	if (rc) {
 		cerr << "Error executing SQLite3 statement: " << sqlite3_errmsg(db) << endl << endl;
@@ -38,6 +75,9 @@ int main(int argc, char* argv[]) {
 	else {
 		cout << "Created MyTable." << endl << endl;
 	}
+
+	system("pause");
+	return 0;
 
 	// Execute SQL
 	cout << "Inserting a value into MyTable ..." << endl;
@@ -50,6 +90,9 @@ int main(int argc, char* argv[]) {
 	else {
 		cout << "Inserted a value into MyTable." << endl << endl;
 	}
+
+	system("pause");
+	return 0;
 
 	// Display MyTable
 	cout << "Retrieving values in MyTable ..." << endl;
