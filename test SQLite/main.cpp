@@ -110,17 +110,17 @@ int main(int argc, char* argv[]) {
 				sqlite3_bind_int(stmt, 12, bm.General.AudioLeadIn);
 				sqlite3_bind_int(stmt, 13, bm.General.PreviewTime);
 
-				sqlite3_bind_double(stmt, 14, (double)bm.Difficulty.HPDrainRate);
-				sqlite3_bind_double(stmt, 15, (double)bm.Difficulty.CircleSize);
-				sqlite3_bind_double(stmt, 16, (double)bm.Difficulty.OverallDifficulty);
-				sqlite3_bind_double(stmt, 17, (double)bm.Difficulty.ApproachRate);
-				sqlite3_bind_double(stmt, 18, (double)bm.Difficulty.SliderMultiplier);
+				sqlite3_bind_double(stmt, 14, bm.Difficulty.HPDrainRate);
+				sqlite3_bind_double(stmt, 15, bm.Difficulty.CircleSize);
+				sqlite3_bind_double(stmt, 16, bm.Difficulty.OverallDifficulty);
+				sqlite3_bind_double(stmt, 17, bm.Difficulty.ApproachRate);
+				sqlite3_bind_double(stmt, 18, bm.Difficulty.SliderMultiplier);
 
 				std::string path = beatmapSet.path().filename().string();
 				std::string file = beatmap.path().filename().string();
 
-				sqlite3_bind_text(stmt, 19, path.c_str(), path.size(), 0);
-				sqlite3_bind_text(stmt, 20, file.c_str(), file.size(), 0);
+				sqlite3_bind_text(stmt, 19, file.c_str(), file.size(), 0);
+				sqlite3_bind_text(stmt, 20, path.c_str(), path.size(), 0);
 				sqlite3_bind_int(stmt, 21, bm.nHitcircles);
 				sqlite3_bind_int(stmt, 22, bm.nSlider);
 				sqlite3_bind_int(stmt, 23, bm.nSplinners);
