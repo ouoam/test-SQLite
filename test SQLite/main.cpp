@@ -14,7 +14,6 @@
 
 #include "Beatmap.h"
 
-using namespace std;
 namespace fs = std::filesystem;
 
 int main(int argc, char* argv[]) {
@@ -22,22 +21,22 @@ int main(int argc, char* argv[]) {
 	char *error;
 
 	// Open Database
-	cout << "Opening MyDb.db ..." << endl;
+	std::cout << "Opening MyDb.db ..." << std::endl;
 	sqlite3 *db;
 	rc = sqlite3_open("MyDb.db", &db);
 	if (rc) {
-		cerr << "Error opening SQLite3 database: " << sqlite3_errmsg(db) << endl << endl;
+		std::cerr << "Error opening SQLite3 database: " << sqlite3_errmsg(db) << std::endl << std::endl;
 		sqlite3_close(db);
 		return 1;
 	}
 	else {
-		cout << "Opened MyDb.db." << endl << endl;
+		std::cout << "Opened MyDb.db." << std::endl << std::endl;
 	}
 
 
 
 	// Execute SQL
-	cout << "Creating MyTable ..." << endl;
+	std::cout << "Creating MyTable ..." << std::endl;
 	const char *sqlCreateTable = 
 	"CREATE TABLE songs ("
 		"id	INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,"
@@ -67,117 +66,148 @@ int main(int argc, char* argv[]) {
 	");";
 	rc = sqlite3_exec(db, sqlCreateTable, NULL, NULL, &error);
 	if (rc) {
-		cerr << "Error executing SQLite3 statement: " << sqlite3_errmsg(db) << endl << endl;
+		std::cerr << "Error executing SQLite3 statement: " << sqlite3_errmsg(db) << std::endl << std::endl;
 		sqlite3_free(error);
 	}
 	else {
-		cout << "Created MyTable." << endl << endl;
+		std::cout << "Created MyTable." << std::endl << std::endl;
 	}
 
 
 
-	sqlite3_stmt *stmt;
-	const char *pzTest;
+	sqlite3_stmt *insertStmt;
 
-	std::string szSQL = "INSERT INTO songs (Title, TitleUnicode, Artist, ArtistUnicode, Creator, Version, Source, "
+	std::string insertSQL = "INSERT INTO songs (Title, TitleUnicode, Artist, ArtistUnicode, Creator, Version, Source, "
 		"Tags, BeatmapID, BeatmapSetID, AudioFilename, AudioLeadIn, PreviewTime, HPDrainRate, CircleSize, "
 		"OverallDifficulty, ApproachRate, SliderMultiplier, OsuFile, OsuDir, nHitcircles, nSlider, "
 		"nSplinners) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
 
-	rc = sqlite3_prepare_v2(db, szSQL.c_str(), szSQL.size(), &stmt, &pzTest);
+	rc = sqlite3_prepare_v2(db, insertSQL.c_str(), insertSQL.size(), &insertStmt, nullptr);
+	if (rc != SQLITE_OK) {
+		std::cerr << "Error opening SQLite3 database: " << sqlite3_errmsg(db) << std::endl << std::endl;
+		sqlite3_close(db);
+		return 1;
+	}
+	else {
+		std::cout << "Prepare Insertion SQL Finish" << std::endl << std::endl;
+	}
+
+	sqlite3_stmt *findStmt;
+	std::string findSQL = "SELECT id FROM songs WHERE OsuFile = ? AND OsuDir = ?;";
+
+	rc = sqlite3_prepare_v2(db, findSQL.c_str(), findSQL.size(), &findStmt, nullptr);
+	if (rc != SQLITE_OK) {
+		std::cerr << "Error opening SQLite3 database: " << sqlite3_errmsg(db) << std::endl << std::endl;
+		sqlite3_close(db);
+		return 1;
+	}
+	else {
+		std::cout << "Prepare Find SQL Finish" << std::endl << std::endl;
+	}
+
+	system("pause");
 
 	std::string path = "D:/osu!/Songs/";
 	for (const auto & beatmapSet : fs::directory_iterator(path)) {
-		std::cout << beatmapSet.path().filename().string() << std::endl;
+		//std::cout << beatmapSet.path().filename().string() << std::endl;
 		for (const auto & beatmap : fs::directory_iterator(beatmapSet.path())) {
 			if (fs::is_regular_file(beatmap) && beatmap.path().extension() == ".osu") {
-				std::cout << "\t" << beatmap.path().filename().string() << std::endl;
-
-				Beatmap::Beatmap bm(beatmap.path().string());
-				
-				sqlite3_bind_text(stmt, 1, bm.Metadata.Title.c_str(),			bm.Metadata.Title.size(), 0);
-				sqlite3_bind_text(stmt, 2, bm.Metadata.TitleUnicode.c_str(),	bm.Metadata.TitleUnicode.size(), 0);
-				sqlite3_bind_text(stmt, 3, bm.Metadata.Artist.c_str(),			bm.Metadata.Artist.size(), 0);
-				sqlite3_bind_text(stmt, 4, bm.Metadata.ArtistUnicode.c_str(),	bm.Metadata.ArtistUnicode.size(), 0);
-				sqlite3_bind_text(stmt, 5, bm.Metadata.Creator.c_str(),			bm.Metadata.Creator.size(), 0);
-				sqlite3_bind_text(stmt, 6, bm.Metadata.Version.c_str(),			bm.Metadata.Version.size(), 0);
-				sqlite3_bind_text(stmt, 7, bm.Metadata.Source.c_str(),			bm.Metadata.Source.size(), 0);
-				sqlite3_bind_text(stmt, 8, bm.Metadata.Tags.c_str(),			bm.Metadata.Tags.size(), 0);
-				sqlite3_bind_int(stmt, 9, bm.Metadata.BeatmapID);
-				sqlite3_bind_int(stmt, 10, bm.Metadata.BeatmapSetID);
-
-				sqlite3_bind_text(stmt, 11, bm.General.AudioFilename.c_str(),	bm.General.AudioFilename.size(), 0);
-				sqlite3_bind_int(stmt, 12, bm.General.AudioLeadIn);
-				sqlite3_bind_int(stmt, 13, bm.General.PreviewTime);
-
-				sqlite3_bind_double(stmt, 14, bm.Difficulty.HPDrainRate);
-				sqlite3_bind_double(stmt, 15, bm.Difficulty.CircleSize);
-				sqlite3_bind_double(stmt, 16, bm.Difficulty.OverallDifficulty);
-				sqlite3_bind_double(stmt, 17, bm.Difficulty.ApproachRate);
-				sqlite3_bind_double(stmt, 18, bm.Difficulty.SliderMultiplier);
-
 				std::string path = beatmapSet.path().filename().string();
 				std::string file = beatmap.path().filename().string();
 
-				sqlite3_bind_text(stmt, 19, file.c_str(), file.size(), 0);
-				sqlite3_bind_text(stmt, 20, path.c_str(), path.size(), 0);
-				sqlite3_bind_int(stmt, 21, bm.nHitcircles);
-				sqlite3_bind_int(stmt, 22, bm.nSlider);
-				sqlite3_bind_int(stmt, 23, bm.nSplinners);
+				sqlite3_bind_text(findStmt, 1, file.c_str(), file.size(), 0);
+				sqlite3_bind_text(findStmt, 2, path.c_str(), path.size(), 0);
 
-				if (rc != SQLITE_OK) {
-					std::cout << "!!! ERROR !!!" << std::endl;
+				bool willAdd = true;
+				do {
+					rc = sqlite3_step(findStmt);
+					switch (rc) {
+					case SQLITE_DONE:
+						break;
+					case SQLITE_ROW:
+						//std::cout << sqlite3_column_text(findStmt, 0) << "  ";
+						willAdd = false;
+						break;
+					default:
+						sqlite3_finalize(findStmt);
+						sqlite3_close(db);
+						std::cout << "!!! ERROR !!!" << std::endl;
+						return 1;
+						break;
+					}
+				} while (rc == SQLITE_ROW);
 
-					return 1;
+				//std::cout << "\t" << beatmap.path().filename().string() << std::endl;
+
+				if (willAdd) {
+					std::cout << beatmap.path().filename().string() << std::endl;
+					Beatmap::Beatmap bm(beatmap.path().string(), false);
+
+					sqlite3_bind_text(insertStmt, 1, bm.Metadata.Title.c_str(), bm.Metadata.Title.size(), 0);
+					sqlite3_bind_text(insertStmt, 2, bm.Metadata.TitleUnicode.c_str(), bm.Metadata.TitleUnicode.size(), 0);
+					sqlite3_bind_text(insertStmt, 3, bm.Metadata.Artist.c_str(), bm.Metadata.Artist.size(), 0);
+					sqlite3_bind_text(insertStmt, 4, bm.Metadata.ArtistUnicode.c_str(), bm.Metadata.ArtistUnicode.size(), 0);
+					sqlite3_bind_text(insertStmt, 5, bm.Metadata.Creator.c_str(), bm.Metadata.Creator.size(), 0);
+					sqlite3_bind_text(insertStmt, 6, bm.Metadata.Version.c_str(), bm.Metadata.Version.size(), 0);
+					sqlite3_bind_text(insertStmt, 7, bm.Metadata.Source.c_str(), bm.Metadata.Source.size(), 0);
+					sqlite3_bind_text(insertStmt, 8, bm.Metadata.Tags.c_str(), bm.Metadata.Tags.size(), 0);
+					sqlite3_bind_int(insertStmt, 9, bm.Metadata.BeatmapID);
+					sqlite3_bind_int(insertStmt, 10, bm.Metadata.BeatmapSetID);
+
+					sqlite3_bind_text(insertStmt, 11, bm.General.AudioFilename.c_str(), bm.General.AudioFilename.size(), 0);
+					sqlite3_bind_int(insertStmt, 12, bm.General.AudioLeadIn);
+					sqlite3_bind_int(insertStmt, 13, bm.General.PreviewTime);
+
+					sqlite3_bind_double(insertStmt, 14, bm.Difficulty.HPDrainRate);
+					sqlite3_bind_double(insertStmt, 15, bm.Difficulty.CircleSize);
+					sqlite3_bind_double(insertStmt, 16, bm.Difficulty.OverallDifficulty);
+					sqlite3_bind_double(insertStmt, 17, bm.Difficulty.ApproachRate);
+					sqlite3_bind_double(insertStmt, 18, bm.Difficulty.SliderMultiplier);
+
+					sqlite3_bind_text(insertStmt, 19, file.c_str(), file.size(), 0);
+					sqlite3_bind_text(insertStmt, 20, path.c_str(), path.size(), 0);
+					sqlite3_bind_int(insertStmt, 21, bm.nHitcircles);
+					sqlite3_bind_int(insertStmt, 22, bm.nSlider);
+					sqlite3_bind_int(insertStmt, 23, bm.nSplinners);
+
+					if (sqlite3_step(insertStmt) != SQLITE_DONE) {
+						sqlite3_finalize(insertStmt);
+						sqlite3_close(db);
+
+						std::cout << "!!! ERROR !!!" << std::endl;
+
+						return 1;
+					}
+
+					sqlite3_reset(insertStmt);
+					sqlite3_clear_bindings(insertStmt);
 				}
+				
 
-				if (sqlite3_step(stmt) != SQLITE_DONE) {
-					sqlite3_finalize(stmt);
-					sqlite3_close(db);
-
-					std::cout << "!!! ERROR !!!2" << std::endl;
-
-					return 1;
-				}
-
-				sqlite3_reset(stmt);
-				sqlite3_clear_bindings(stmt);
+				sqlite3_reset(findStmt);
+				sqlite3_clear_bindings(findStmt);
 			}
 		}
+		//std::cout << std::endl;
 	}
+	sqlite3_finalize(findStmt);
+	sqlite3_finalize(insertStmt);
 	
 	system("pause");
 	//return 0;
-	
 
-	
-
-	// Execute SQL
-	cout << "Inserting a value into MyTable ..." << endl;
-	const char *sqlInsert = "INSERT INTO MyTable VALUES(NULL, 'A Value');";
-	rc = sqlite3_exec(db, sqlInsert, NULL, NULL, &error);
-	if (rc) {
-		cerr << "Error executing SQLite3 statement: " << sqlite3_errmsg(db) << endl << endl;
-		sqlite3_free(error);
-	}
-	else {
-		cout << "Inserted a value into MyTable." << endl << endl;
-	}
-
-	system("pause");
-	return 0;
 
 	// Display MyTable
-	cout << "Retrieving values in MyTable ..." << endl;
-	const char *sqlSelect = "SELECT * FROM MyTable;";
+	std::cout << "Retrieving values in MyTable ..." << std::endl;
+	const char *sqlSelect = "SELECT * FROM songs;";
 	char **results = NULL;
 	int rows, columns;
 	sqlite3_get_table(db, sqlSelect, &results, &rows, &columns, &error);
-	if (rc) {
-		cerr << "Error executing SQLite3 query: " << sqlite3_errmsg(db) << endl << endl;
-		sqlite3_free(error);
-	}
-	else {
+	//if (rc) {
+	//	std::cerr << "Error executing SQLite3 query: " << sqlite3_errmsg(db) << std::endl << std::endl;
+	//	sqlite3_free(error);
+	//}
+	//else {
 		// Display Table
 		for (int rowCtr = 0; rowCtr <= rows; ++rowCtr) {
 			for (int colCtr = 0; colCtr < columns; ++colCtr) {
@@ -185,35 +215,35 @@ int main(int argc, char* argv[]) {
 				int cellPosition = (rowCtr * columns) + colCtr;
 
 				// Display Cell Value
-				cout.width(12);
-				cout.setf(ios::left);
-				cout << results[cellPosition] << " ";
+				//std::cout.width(12);
+				//std::cout.setf(std::ios::left);
+				//std::cout << results[cellPosition] << " ";
 			}
 
 			// End Line
-			cout << endl;
+			//std::cout << std::endl;
 
 			// Display Separator For Header
 			if (0 == rowCtr) {
 				for (int colCtr = 0; colCtr < columns; ++colCtr) {
-					cout.width(12);
-					cout.setf(ios::left);
-					cout << "~~~~~~~~~~~~ ";
+					//std::cout.width(12);
+					//std::cout.setf(std::ios::left);
+					//std::cout << "~~~~~~~~~~~~ ";
 				}
-				cout << endl;
+				//std::cout << std::endl;
 			}
 		}
-	}
+	//}
 	sqlite3_free_table(results);
 
 	// Close Database
-	cout << "Closing MyDb.db ..." << endl;
+	std::cout << "Closing MyDb.db ..." << std::endl;
 	sqlite3_close(db);
-	cout << "Closed MyDb.db" << endl << endl;
+	std::cout << "Closed MyDb.db" << std::endl << std::endl;
 
 	// Wait For User To Close Program
-	cout << "Please press any key to exit the program ..." << endl;
-	cin.get();
+	std::cout << "Please press any key to exit the program ..." << std::endl;
+	std::cin.get();
 
 	return 0;
 }

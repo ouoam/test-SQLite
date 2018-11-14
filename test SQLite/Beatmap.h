@@ -114,7 +114,7 @@ namespace Beatmap {
 		void bmProEvents();
 		void bmProTimingPoints();
 		void bmProColours();
-		void bmProHitObjects();
+		void bmProHitObjects(bool calcCurve);
 
 	public:
 		struct bmGeneral General;
@@ -133,9 +133,9 @@ namespace Beatmap {
 		int nSlider = 0;
 		int nSplinners = 0;
 
-		void load(std::string);
-		Beatmap(std::string file) {
-			load(file);
+		void load(std::string, bool calcCurve = true);
+		Beatmap(std::string file, bool calcCurve = true) {
+			load(file, calcCurve);
 		}
 		Beatmap() {}
 	};

@@ -16,7 +16,7 @@ namespace Beatmap {
 	int bmHitObjects::TimeFadeIn = 400;
 	int bmHitObjects::CR = 5;
 
-	void Beatmap::load(std::string file) {
+	void Beatmap::load(std::string file, bool calcCurve) {
 		std::string line;
 		bmFile.open(file);
 		if (bmFile.is_open()) {
@@ -49,7 +49,7 @@ namespace Beatmap {
 						bmProColours();
 					}
 					else if (line == "[HitObjects]") {
-						bmProHitObjects();
+						bmProHitObjects(calcCurve);
 					}
 				}
 			}
@@ -284,7 +284,7 @@ namespace Beatmap {
 		}
 	}
 
-	void Beatmap::bmProHitObjects() {
+	void Beatmap::bmProHitObjects(bool calcCurve) {
 		std::string line = "++";
 		getline(bmFile, line);
 		while (line != "" && !bmFile.eof()) {
@@ -328,25 +328,25 @@ namespace Beatmap {
 				}
 				bmho.sliders.endPoint = curvePoints[curvePoints.getVertexCount() - 1].position;
 
-				if (bmho.sliders.sliderType == "L") {
-					sf::VertexArray line(sf::LineStrip, 2);
-					line[0].position = sf::Vector2f(curvePoints[0].position);
-					if (curvePoints.getVertexCount() == 1) {
-						line[1].position = sf::Vector2f(curvePoints[0].position);
+				if (calcCurve) {
+					if (bmho.sliders.sliderType == "L") {
+						sf::VertexArray line(sf::LineStrip, 2);
+						line[0].position = sf::Vector2f(curvePoints[0].position);
+						if (curvePoints.getVertexCount() == 1) {
+							line[1].position = sf::Vector2f(curvePoints[0].position);
+						}
+						else {
+							line[1].position = sf::Vector2f(curvePoints[1].position);
+						}
+
+						bmho.sliders.curvePoints = line;
 					}
-					else {
-						line[1].position = sf::Vector2f(curvePoints[1].position);
+					else if (bmho.sliders.sliderType == "P") {
+						bmho.sliders.curvePoints = CircularArcApproximator(curvePoints).CreateArc();
 					}
-					
-					bmho.sliders.curvePoints = line;
-				}
-				else if (bmho.sliders.sliderType == "P")
-				{
-					//bmho.sliders.curvePoints = CircularArcApproximator(curvePoints).CreateArc();
-				}
-				else if (bmho.sliders.sliderType == "B")
-				{
-					//bmho.sliders.curvePoints = BezierApproximator(curvePoints).CreateBezier();
+					else if (bmho.sliders.sliderType == "B") {
+						bmho.sliders.curvePoints = BezierApproximator(curvePoints).CreateBezier();
+					}
 				}
 
 				getline(str, value, ',');
